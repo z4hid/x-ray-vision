@@ -34,6 +34,7 @@ def save_object(file_path, obj):
     except Exception as e:
         raise CustomException(e, sys)
     
+    
 def load_object(file_path):
     """
     This method loads the python object from a file using dill library.
