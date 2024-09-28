@@ -17,11 +17,11 @@ class DataIngestion:
         try:
             self.get_data_from_drive()
             self.extract_zip_file()
-            logging.info("Completed data ingestion process")
             
             self.data_ingestion_artifacts = DataIngestionArtifacts(
                 self.data_ingestion_config.DATA_INGESTION_ARTIFACTS_DIR
             )
+            logging.info("Completed data ingestion process")
 
         except Exception as e:
             raise CustomException(e, sys)        
