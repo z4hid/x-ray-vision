@@ -55,3 +55,27 @@ def load_object(file_path):
             return obj
     except Exception as e:
         raise CustomException(e, sys)
+    
+    
+def image_to_base64(image):
+
+    """
+    This method encodes an image file to base64.
+
+    Args:
+        image (str): The path to the image file.
+
+    Raises:
+        CustomException: If there is any error while encoding the image.
+
+    Returns:
+        bytes: The base64 encoded image.
+    """
+    try:
+        logging.info("Entered the image_to_base64 method of utils")
+        with open(image, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+            logging.info("Exited the image_to_base64 method of utils")
+            return encoded_string
+    except Exception as e:
+        raise CustomException(e, sys) 
