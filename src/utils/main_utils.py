@@ -33,3 +33,25 @@ def save_object(file_path, obj):
 
     except Exception as e:
         raise CustomException(e, sys)
+    
+def load_object(file_path):
+    """
+    This method loads the python object from a file using dill library.
+
+    Args:
+        file_path (str): The path to the file from where the object will be loaded.
+
+    Raises:
+        CustomException: If there is any error while loading the object.
+
+    Returns:
+        object: The python object which was loaded from the file.
+    """
+    try:
+        logging.info("Entered the load_object method of utils")
+        with open(file_path, "rb") as file_obj:
+            obj = dill.load(file_obj)
+            logging.info("Exited the load_object method of utils")
+            return obj
+    except Exception as e:
+        raise CustomException(e, sys)
