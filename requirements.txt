@@ -1,2 +1,19 @@
-
+numpy
+tqdm
+utils
+cython
+pillow
+PyYAML
+Jinja2
+fastapi
+uvicorn
+ipykernel
+matplotlib
+opencv-python
+torch-summary
+dill
+albumentations
+python-multipart
+gdown
+huggingface-hub
 -e .
