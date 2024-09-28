@@ -9,3 +9,6 @@ DATA_PATH: str = os.path.join(os.getcwd(), "data")
 ARTIFACTS_DIR: str = os.path.join("artifacts", TIMESTAMP)
 use_cuda = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if use_cuda else "cpu")
+
+# data Ingestion constants
+DATA_INGESTION_ARTIFACTS_DIR = "DataIngestionArtifacts"
