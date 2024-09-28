@@ -134,7 +134,7 @@ venv.bak/
 # DATA
 notebook/data/
 notebook/model.pt
-
+artifacts/
 
 # Spyder project settings
 .spyderproject
