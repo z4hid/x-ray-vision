@@ -79,3 +79,23 @@ def image_to_base64(image):
             return encoded_string
     except Exception as e:
         raise CustomException(e, sys) 
+    
+    
+def read_yaml_file(file_path):
+    """
+    This method reads a yaml file and returns its contents as a python object.
+
+    Args:
+        file_path (str): The path to the yaml file.
+
+    Raises:
+        CustomException: If there is any error while reading the yaml file.
+
+    Returns:
+        object: The python object which was read from the yaml file.
+    """
+    try:
+        with open(file_path, "rb") as yaml_file:
+            return yaml.safe_load(yaml_file)
+    except Exception as e:
+        raise CustomException(e, sys)
