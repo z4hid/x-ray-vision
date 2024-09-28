@@ -5,6 +5,7 @@ from src.exception import CustomException
 from src.logger import logging
 from src.configurations.data_download import download_from_gdrive
 from src.entity.config_entity import DataIngestionConfig
+from src.entity.artifact_entity import DataIngestionArtifacts
 
 
 class DataIngestion:
@@ -18,7 +19,9 @@ class DataIngestion:
             self.extract_zip_file()
             logging.info("Completed data ingestion process")
             
-            self.data_ingestion_artifacts = self.data_ingestion_config.DATA_INGESTION_ARTIFACTS_DIR
+            self.data_ingestion_artifacts = DataIngestionArtifacts(
+                self.data_ingestion_config.DATA_INGESTION_ARTIFACTS_DIR
+            )
 
         except Exception as e:
             raise CustomException(e, sys)        
