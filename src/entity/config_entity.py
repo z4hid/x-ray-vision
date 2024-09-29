@@ -42,4 +42,3 @@ class ModelTrainerConfig:
         self.NUM_WORKERS: int = self.model_trainer_config['model_trainer_config']['num_workers']
         self.DATA_TRANSFORMATION_ARTIFACTS_DIR = os.path.join(os.getcwd(), ARTIFACTS_DIR, MODEL_TRAINER_ARTIFACTS_DIR)
         self.TRAINED_MODEL_PATH: str = os.path.join(self.MODEL_TRAINER_ARTIFACTS_DIR, TRAINED_MODEL_PATH)
-        
