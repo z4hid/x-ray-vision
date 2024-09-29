@@ -23,7 +23,7 @@ class DataTransformationConfig:
         self.IMG_SIZE: int = self.config['data_transformation_config']['img_size']
         self.DEGREE_N: int = self.config['data_transformation_config']['degree_n']
         self.DEGREE_P: int = self.config['data_transformation_config']['degree_p']
-        self.TRAIN_RATION: float = self.config['data_transformation_config']['train_ratio']
+        self.TRAIN_RATIO: float = self.config['data_transformation_config']['train_ratio']
         self.VALID_RATIO: float = self.config['data_transformation_config']['valid_ratio']
         self.DATA_TRANSFORMATION_ARTIFACTS_DIR = os.path.join(os.getcwd(), ARTIFACTS_DIR, DATA_TRANSFORMATION_ARTIFACTS_DIR)
         self.TRAIN_TRANSFORM_OBJECT_FILE_PATH = os.path.join(self.DATA_TRANSFORMATION_ARTIFACTS_DIR, TRAIN_TRANSFORM_OBJECT_FILE_NAME)
