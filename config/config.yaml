@@ -11,3 +11,10 @@ data_transformation_config:
   degree_p: +20
   train_ratio: 0.6
   valid_ratio: 0.3
+
+
+model_trainer_config:
+  epochs: 5
+  lr: 0.001
+  batch_size: 32
+  num_workers: 4
