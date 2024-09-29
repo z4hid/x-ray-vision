@@ -21,4 +21,12 @@ class DataTransformationArtifacts:
     
     def to_dict(self):
         return self.__dict__
+ 
+ 
+ # Model Training Artifacts   
+@dataclass
+class ModelTrainerArtifacts:
+    trained_model_path: str
     
+    def to_dict(self):
+        return self.__dict__
