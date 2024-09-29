@@ -16,7 +16,7 @@ from src.utils.main_utils import load_object
 class ModelTrainer:
 
     def __init__(self, model_trainer_config: ModelTrainerConfig,
-                 data_transformation_artifacts: DataTransformationArtifacts:
+                 data_transformation_artifacts: DataTransformationArtifacts):
         try:
             logging.info(f"{'>>' * 20} Model Trainer {'<<' * 20}")
             self.model_trainer_config = model_trainer_config
