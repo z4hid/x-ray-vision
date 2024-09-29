@@ -30,3 +30,16 @@ class DataTransformationConfig:
         self.VALID_TRANSFORM_OBJECT_FILE_PATH = os.path.join(self.DATA_TRANSFORMATION_ARTIFACTS_DIR, VALID_TRANSFORM_OBJECT_FILE_NAME)
         self.TEST_TRANSFORM_OBJECT_FILE_PATH = os.path.join(self.DATA_TRANSFORMATION_ARTIFACTS_DIR, TEST_TRANSFORM_OBJECT_FILE_NAME)
         
+
+
+@dataclass
+class ModelTrainerConfig:
+    def __init__(self):
+        self.model_trainer_config = read_yaml_file(CONFIG_PATH)
+        self.LR: float = self.model_trainer_config['model_trainer_config']['lr']
+        self.EPOCHS: int = self.model_trainer_config['model_trainer_config']['epochs']
+        self.BATCH_SIZE: int = self.model_trainer_config['model_trainer_config']['batch_size']
+        self.NUM_WORKERS: int = self.model_trainer_config['model_trainer_config']['num_workers']
+        self.DATA_TRANSFORMATION_ARTIFACTS_DIR = os.path.join(os.getcwd(), ARTIFACTS_DIR, MODEL_TRAINER_ARTIFACTS_DIR)
+        self.TRAINED_MODEL_PATH: str = os.path.join(self.MODEL_TRAINER_ARTIFACTS_DIR, TRAINED_MODEL_PATH)
+        
