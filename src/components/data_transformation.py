@@ -57,4 +57,12 @@ class DataTransformation:
             raise CustomException(e, sys)
     
 
+    def initiate_data_transformation(self) -> DataTransformationArtifacts:
+        try:
+            logging.info("Entered the initiate_data_transformation method of data transformation class")
+            dataset = datasets.ImageFolder(self.data_ingestion_artifact.dataset_path, transform=self.get_transform_data())
+            total_count = len(dataset)
+            
 
+        except Exception as e:
+            raise CustomException(e, sys)
