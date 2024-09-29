@@ -31,7 +31,7 @@ class TrainingPipeline:
         logging.info("Entered the start_data_transformation method of training pipeline class")
         try:
             data_transformation = DataTransformation(
-                data_ingestion_artifacts=data_ingestion_artifacts,
+                data_ingestion_artifact=data_ingestion_artifacts,
                 data_transformation_config=self.data_transformation_config
             )
             data_transformation_artifacts = (data_transformation.initiate_data_transformation())

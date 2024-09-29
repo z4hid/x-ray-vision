@@ -22,6 +22,8 @@ class DataIngestion:
                 self.data_ingestion_config.DATA_INGESTION_ARTIFACTS_DIR
             )
             logging.info("Completed data ingestion process")
+            
+            return self.data_ingestion_artifacts
 
         except Exception as e:
             raise CustomException(e, sys)        
