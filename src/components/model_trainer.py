@@ -103,3 +103,36 @@ class ModelTrainer:
         # print(f"Val Precision: {val_precision:.4f}, Val Recall: {val_recall:.4f}, Val F1: {val_f1:.4f}")
 
         return train_loss, train_acc, val_loss, val_acc, val_precision, val_recall, val_f1
+    
+    
+    def initiate_model_trainer(self) -> ModelTrainerAtrifacts:
+        
+        try:
+            logging.info("Entered the initiate_model_trainer method of model trainer class")
+            
+            train_dataset = load_object(file_path=self.data_transformation_artifacts.train_transformed_object)
+            valid_dataset = load_object(file_path=self.data_transformation_artifacts.valid_transformed_object)
+            logging.info("Loaded train and valid dataset")
+            
+            train_loader = DataLoader(dataset=train_dataset,
+                                      shuffle=True, 
+                                      batch_size=self.batch_size, 
+                                      num_workers=self.num_workers)
+            valid_loader = DataLoader(dataset=valid_dataset,
+                                      shuffle=True,
+                                      batch_size=self.batch_size, 
+                                      num_workers=self.num_workers)
+            logging.info("Loaded train and valid dataloader")
+            
+            model = models.resnet18(pretrained=True)
+            num_features = model.fc.in_features
+            model.fc = nn.Linear(num_features, 1)
+            model = model.to(DEVICE)
+            logging.info("Loaded the model")
+            
+            criterion = nn.BCEWithLogitsLoss()
+            optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+            
+
+        except Exception as e:
+            raise CustomException(e, sys)
