@@ -4,14 +4,16 @@ from src.exception import CustomException
 from src.logger import logging
 from src.components.data_ingestion import DataIngestion
 from src.components.data_transformation import DataTransformation
-from src.entity.config_entity import DataIngestionConfig, DataTransformationConfig
-from src.entity.artifact_entity import DataIngestionArtifacts, DataTransformationArtifacts
+from src.components.model_trainer import ModelTrainer
+from src.entity.config_entity import DataIngestionConfig, DataTransformationConfig, ModelTrainerConfig
+from src.entity.artifact_entity import DataIngestionArtifacts, DataTransformationArtifacts, ModelTrainerArtifacts
 
 
 class TrainingPipeline:
     def __init__(self):
         self.data_ingestion_config = DataIngestionConfig()
         self.data_transformation_config = DataTransformationConfig()
+        self.model_trainer_config = ModelTrainerConfig()
 
 
     def start_data_ingestion(self) -> DataIngestionArtifacts:
@@ -40,6 +42,19 @@ class TrainingPipeline:
         except Exception as e:
             raise CustomException(e, sys)
         
+    def start_model_trainer(self, data_transformation_artifacts: DataTransformationArtifacts) -> ModelTrainerArtifacts:
+        try:
+            logging.info("Entered the start_model_trainer method of training pipeline class")
+            model_trainer = ModelTrainer(
+                data_transformation_artifacts=data_transformation_artifacts,
+                model_trainer_config=self.model_trainer_config,
+            )
+            model_trainer_artifacts = (model_trainer.initiate_model_trainer())
+            logging.info("Exited the start_model_trainer method of training pipeline class")
+            return model_trainer_artifacts
+        except Exception as e:
+            raise CustomException(e, sys)
+        
     
     def run_pipeline(self):
         try:
@@ -48,6 +63,10 @@ class TrainingPipeline:
             data_transformation_artifact = self.start_data_transformation(
                 data_ingestion_artifacts=data_ingestion_artifact
                 )
+            model_trainer_artifacts = self.start_model_trainer(
+                data_transformation_artifacts=data_transformation_artifact
+                )
+            logging.info("Exited the run_pipeline method of training pipeline class")
             
         except Exception as e:
             raise CustomException(e, sys)

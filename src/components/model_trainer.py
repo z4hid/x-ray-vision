@@ -135,10 +135,10 @@ class ModelTrainer:
             logging.info("Loaded pretrained resnet34 model")
             model = model.to(DEVICE)
             criterion = nn.BCEWithLogitsLoss()
-            logging("Binary cross entropy loss is used")
+            logging.info("Binary cross entropy loss is used")
             optimizer = torch.optim.Adam(model.parameters(),
                                          lr=self.learning_rate)
-            logging("Adam optimizer is used")
+            logging.info("Adam optimizer is used")
             logging.info("Model Training started")
             
             for i in range(self.epochs):
