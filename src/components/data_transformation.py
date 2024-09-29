@@ -6,7 +6,7 @@ from src.exception import CustomException
 from torchvision import transforms, datasets
 from src.utils.main_utils import save_object
 from src.entity.config_entity import DataTransformationConfig
-from src.entity.artifact_entity import DataIngestionArtifacts
+from src.entity.artifact_entity import DataIngestionArtifacts, DataTransformationArtifacts
 
 
 class DataTransformation:
@@ -62,7 +62,26 @@ class DataTransformation:
             logging.info("Entered the initiate_data_transformation method of data transformation class")
             dataset = datasets.ImageFolder(self.data_ingestion_artifact.dataset_path, transform=self.get_transform_data())
             total_count = len(dataset)
+            logging.info("Total number of images in the dataset: ", total_count)
+            classes = len(os.listdir(self.data_ingestion_artifact.dataset_path))
+            logging.info("Total number of classes in the dataset: ", classes)
+            train_dataset, valid_dataset, test_dataset = self.split_data(dataset, total_count)
+            logging.info("Split dataset into train, validation, and test datasets")
             
+            save_object(file_path=self.data_transformation_config.TRAIN_TRANSFORM_OBJECT_FILE_PATH, obj=train_dataset)
+            save_object(file_path=self.data_transformation_config.VALID_TRANSFORM_OBJECT_FILE_PATH, obj=valid_dataset)
+            save_object(file_path=self.data_transformation_config.TEST_TRANSFORM_OBJECT_FILE_PATH, obj=test_dataset)
+            logging.info("Saved train, validation, and test datasets as objects")
+            
+            data_transformation_artifact = DataTransformationArtifacts(
+                train_transform_object_path=self.data_transformation_config.TRAIN_TRANSFORM_OBJECT_FILE_PATH,
+                valid_transform_object_path=self.data_transformation_config.VALID_TRANSFORM_OBJECT_FILE_PATH,
+                test_transform_object_path=self.data_transformation_config.TEST_TRANSFORM_OBJECT_FILE_PATH,
+                classes=classes
+            )
+            logging.info(f"Data transformation artifact: {data_transformation_artifact}")
+            logging.info("Exited the initiate_data_transformation method of data transformation class")
+            return data_transformation_artifact
 
         except Exception as e:
             raise CustomException(e, sys)
