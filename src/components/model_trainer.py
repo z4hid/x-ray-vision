@@ -12,11 +12,17 @@ from src.logger import logging
 from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_entity import DataTransformationArtifacts, ModelTrainerArtifacts
 from src.utils.main_utils import load_object
-from src.constants import DEVICE
+from src.constants import *
+
 
 class ModelTrainer:
     def __init__(self, model_trainer_config: ModelTrainerConfig,
                  data_transformation_artifacts: DataTransformationArtifacts):
+        """
+        This method initializes the model trainer object with the config and artifacts.
+        ModelTrainerConfig: model trainer config object
+        DataTransformationArtifacts: data transformation artifacts object
+        """
         self.model_trainer_config = model_trainer_config
         self.data_transformation_artifacts = data_transformation_artifacts
         self.learning_rate = self.model_trainer_config.LR
