@@ -11,6 +11,12 @@ from src.entity.artifact_entity import DataIngestionArtifacts, DataTransformatio
 
 class DataTransformation:
     def __init__(self, data_transformation_config: DataTransformationConfig, data_ingestion_artifact: DataIngestionArtifacts):
+        """
+        DataTransformation: Constructor to initialize the DataTransformation class.
+        Parameters:
+        data_transformation_config (DataTransformationConfig): DataTransformationConfig object
+        data_ingestion_artifact (DataIngestionArtifacts): DataIngestionArtifacts object
+        """
         try:
             self.data_transformation_config = data_transformation_config
             self.data_ingestion_artifact = data_ingestion_artifact
@@ -27,6 +33,13 @@ class DataTransformation:
         
     
     def get_transform_data(self):
+        """
+        get_transform_data: This method returns the data transformation object.
+        Parameters:
+        None
+        Returns:
+        data_transform (transforms.Compose): Data transformation object
+        """
         try:
             logging.info("Entered the get_transform_data method of data transformation class")
             data_transform = transforms.Compose([
