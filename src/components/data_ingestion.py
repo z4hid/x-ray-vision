@@ -10,9 +10,11 @@ from src.entity.artifact_entity import DataIngestionArtifacts
 
 class DataIngestion:
     def __init__(self, data_ingestion_config: DataIngestionConfig):
+        
         self.data_ingestion_config = data_ingestion_config
 
     def initiate_data_ingestion(self):
+        
         logging.info("Starting data ingestion process")
         try:
             self.get_data_from_drive()
