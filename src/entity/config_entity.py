@@ -44,3 +44,10 @@ class ModelTrainerConfig:
         # Define the correct artifacts directory path for model trainer
         self.MODEL_TRAINER_ARTIFACTS_DIR: str = os.path.join(os.getcwd(), ARTIFACTS_DIR, MODEL_TRAINER_ARTIFACTS_DIR)
         self.TRAINED_MODEL_PATH: str = os.path.join(self.MODEL_TRAINER_ARTIFACTS_DIR, TRAINED_MODEL_PATH)
+
+@dataclass
+class ModelEvaluationConfig:
+    def __init__(self):
+        self.model_evaluation_config = read_yaml_file(CONFIG_PATH)
+        self.MODEl_NAME: str = self.model_evaluation_config['model_evaluation_config']['model_name']
+        
