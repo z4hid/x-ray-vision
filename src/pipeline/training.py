@@ -17,6 +17,15 @@ class TrainingPipeline:
 
 
     def start_data_ingestion(self) -> DataIngestionArtifacts:
+        """
+        This method starts the data ingestion process.
+
+        Returns:
+            DataIngestionArtifacts: Artifact containing the paths or references to the ingested data.
+
+        Raises:
+            CustomException: If an error occurs during the data ingestion process.
+        """
         try:
             logging.info("Entereed the start_data_ingestion method of training pipeline class")
             data_ingestion = DataIngestion(
