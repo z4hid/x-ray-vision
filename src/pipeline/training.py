@@ -39,6 +39,18 @@ class TrainingPipeline:
         
     
     def start_data_transformation(self, data_ingestion_artifacts: DataIngestionArtifacts) -> DataTransformationArtifacts:
+        """
+        This method starts the data transformation process.
+
+        Parameters:
+            data_ingestion_artifacts (DataIngestionArtifacts): Artifact containing the paths or references to the ingested data.
+
+        Returns:
+            DataTransformationArtifacts: Artifact containing the paths or references to the transformed data.
+
+        Raises:
+            CustomException: If an error occurs during the data transformation process.
+        """
         logging.info("Entered the start_data_transformation method of training pipeline class")
         try:
             data_transformation = DataTransformation(
