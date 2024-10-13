@@ -28,4 +28,4 @@ TRAINED_MODEL_PATH = "model.pt"
 # Model Evaluation constants
 MODEL_EVALUATION_ARTIFACTS_DIR = "ModelEvaluationArtifacts"
 BEST_MODEL_DIR = "best_model"
-MODEl_NAME = "model.pt"
+MODEL_NAME = "model.pt"
