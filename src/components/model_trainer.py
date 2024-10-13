@@ -126,7 +126,7 @@ class ModelTrainer:
             logging.info("Loaded pretrained resnet34 model")
             model = model.to(DEVICE)
             
-            criterion = nn.BCEWithLogitsLoss()
+            criterion = nn.BCEWithLogitsLoss() # Binary cross entropy with sigmoid, so no need to use sigmoid in the model
             optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
             
             logging.info("Model Training started")
