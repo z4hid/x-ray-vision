@@ -22,4 +22,4 @@ model_trainer_config:
 model_evaluation_config:
   batch_size: 32
   num_workers: 4
-  
+  model_repo_name: "z4hid/xray-vision"
