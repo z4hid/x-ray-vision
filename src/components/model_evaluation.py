@@ -1,103 +1,118 @@
 import os
 import sys
 import torch
-from tqdm import tqdm
-from src.constants import DEVICE
+import torch.nn as nn
 from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+
 from src.exception import CustomException
 from src.logger import logging
+from src.entity.pretrained_model import get_pretrained_model 
+from src.entity.config_entity import ModelEvaluationConfig
+from src.entity.artifact_entity import ModelEvaluationArtifacts, DataTransformationArtifacts
 from src.utils.main_utils import load_object
-from src.entity.config_entity import ModelEvaluationConfig
-from src.entity.artifact_entity import DataTransformationArtifacts, ModelTrainerArtifacts
-from src.components.data_transformation import DataTransformation
-from src.components.model_trainer import ModelTrainer
-from src.entity.config_entity import ModelEvaluationConfig
-from src.entity.artifact_entity import ModelTrainerArtifacts, DataTransformationArtifacts, ModelEvaluationArtifacts
-from huggingface_hub import hf_hub_download
+from src.constants import *
 
-class ModelEvaluation:
-    def __init__(self, model_evaluation_config: ModelEvaluationConfig, model_trainer_artifacts: ModelTrainerArtifacts, data_transformation_artifacts: DataTransformationArtifacts):
+
+class ModelEvaluator:
+    def __init__(self, model_evaluation_config: ModelEvaluationConfig,
+                 data_transformation_artifacts: DataTransformationArtifacts):
+        """
+        Initializes the model evaluator with the config and data artifacts.
+        """
         self.model_evaluation_config = model_evaluation_config
-        self.model_trainer_artifacts = model_trainer_artifacts
         self.data_transformation_artifacts = data_transformation_artifacts
-        
-    def get_best_model_from_huggingface(self):
+        self.batch_size = self.model_evaluation_config.BATCH_SIZE
+        self.num_workers = self.model_evaluation_config.NUM_WORKERS
+
+    def evaluate(self, model, criterion, dataloader):
+        """
+        This method evaluates the model on the validation/test set.
+        """
         try:
-            logging.info("Entered the get_best_model_from_huggingface method of model evaluation class")
-            model_path = hf_hub_download(repo_id=self.model_evaluation_config.MODEL_REPO_NAME,
-                                         filename=self.model_evaluation_config.MODEl_NAME, 
-                                         local_dir=self.model_evaluation_config.BEST_MODEL_DIR)
-            
-            best_model_path = os.path.join(self.model_evaluation_config.BEST_MODEL_DIR,
-                                           self.model_evaluation_config.MODEl_NAME)
-            logging.info("Exited the get_best_model_from_huggingface method of model evaluation class")
-            return best_model_path
-        except Exception as e:
-            raise CustomException(e, sys)
-        
-    def evaluate(self, model, criterion, test_dataloader):
-        try:
-            logging.info("Entered the evaluate method of model evaluation class")
-            total_test_loss = 0
             model.eval()
-            with tqdm(test_dataloader, unit="batch", leave=False) as pbar:
-                pbar.set_description(f"Testing")
-                for images, labels in pbar:
-                    images = images.to(DEVICE)
-                    labels = labels.float().to(DEVICE)
-                    output = model(images) #.view(-1)
-                    loss = criterion(output, labels)
-                    total_test_loss += loss.item()
+            val_loss = 0.0
+            val_correct = 0
+            val_total = 0
             
-            test_loss = total_test_loss/len(self.data_transformation_artifacts.test_transformed_object)
-            print(f"Test Loss: {test_loss:.4f}")
-            logging.info("Exited the evaluate method of model evaluation class")
-            return test_loss
+            with torch.no_grad():
+                with tqdm(dataloader, desc="Evaluating") as pbar:
+                    for images, labels in pbar:
+                        images = images.to(DEVICE)
+                        labels = labels.float().to(DEVICE)
+                        
+                        outputs = model(images).squeeze()
+                        
+                        # Ensure outputs and labels have the same shape
+                        outputs = outputs.view(-1)
+                        labels = labels.view(-1)
+                        
+                        loss = criterion(outputs, labels)
+                        val_loss += loss.item()
+                        
+                        predicted = (outputs > 0.5).float()
+                        val_total += labels.size(0)
+                        val_correct += (predicted == labels).sum().item()
+                        
+                        pbar.set_postfix({'loss': val_loss / (pbar.n + 1), 'accuracy': 100 * val_correct / val_total})
+            
+            val_loss /= len(dataloader)
+            val_accuracy = 100 * val_correct / val_total
+            
+            print(f"Evaluation Loss: {val_loss:.4f}, Evaluation Accuracy: {val_accuracy:.2f}%")
+            logging.info(f"Evaluation Loss: {val_loss:.4f}, Evaluation Accuracy: {val_accuracy:.2f}%")
+            
+            return val_loss, val_accuracy
 
         except Exception as e:
             raise CustomException(e, sys)
 
-
-    def initiate_model_evaluation(self) -> ModelTrainerArtifacts:
-        logging.info("Entered the initiate_model_evaluation method of model evaluation class")
+    def initiate_model_evaluation(self) -> ModelEvaluationArtifacts:
+        """
+        This method initiates model evaluation by loading the model and running the evaluation.
+        """
         try:
-            logging.info("Loading validation data for model evaluation")
+            logging.info("Entered the initiate_model_evaluation method of ModelEvaluator class")
+            
             test_dataset = load_object(file_path=self.data_transformation_artifacts.test_transformed_object)
+            logging.info("Loaded test dataset")
+            
             test_loader = DataLoader(dataset=test_dataset,
-                                     shuffle=False,
-                                     batch_size=self.model_evaluation_config.BATCH_SIZE,
-                                     num_workers=self.model_evaluation_config.NUM_WORKERS)
-            criterion = torch.nn.BCEWithLogitsLoss()
-            logging.info("Loading currently trained model")
-            model = torch.load(self.model_trainer_artifacts.trained_model_path, map_location=DEVICE, weights_only=False)
-            model.eval()
-            trained_model_loss = self.evaluate(model=model, criterion=criterion, test_dataloader=test_loader)
-            logging.info("Fetch the best model from huggingface")
-            best_model_path = self.get_best_model_from_huggingface()
-            logging.info("Check if the best model is same as the trained model")
-            if os.path.isfile(best_model_path) is False:
-                is_model_accepted = True
-                logging.info("The best model is False and currently trained model is acccepted as True")
+                                     shuffle=False, 
+                                     batch_size=self.batch_size, 
+                                     num_workers=self.num_workers)
+            logging.info("Loaded test dataloader")
+            
+            # Load the pretrained model
+            model = get_pretrained_model()
+            logging.info("Loaded pretrained ResNet34 model")
+            
+            # Load model weights from the best-trained model checkpoint
+            if os.path.exists(self.model_evaluation_config.TRAINED_MODEL_PATH):
+                model.load_state_dict(torch.load(self.model_evaluation_config.TRAINED_MODEL_PATH))
+                logging.info(f"Loaded trained model from {self.model_evaluation_config.TRAINED_MODEL_PATH}")
             else:
-                logging.info("Load best model from huggingface")
-                model = torch.load(best_model_path, map_location=DEVICE, weights_only=False)
-                model.eval()
-                best_model_loss = self.evaluate(model=model, criterion=criterion, test_dataloader=test_loader)
-                
-                logging.info("Comparing loss between best model loss and trained model loss")
-                
-                if best_model_loss > trained_model_loss:
-                    is_model_accepted = True
-                    logging.info("Trained model not accepted!!!")
-                
-                else:
-                    is_model_accepted = False
-                    logging.info("Trained model accepted!")
-    
-            model_trainer_artifacts = ModelEvaluationArtifacts(is_model_accepted=is_model_accepted)
-            logging.info("Exited the initiate_model_evaluation method of model evaluation class")
-            return model_trainer_artifacts
+                raise CustomException("Trained model not found.", sys)
             
+            model = model.to(DEVICE)
             
+            criterion = nn.BCEWithLogitsLoss()  # Binary cross entropy with sigmoid, so no need to use sigmoid in the model
+            
+            logging.info("Model Evaluation started")
+            
+            val_loss, val_accuracy = self.evaluate(model, criterion, test_loader)
+            
+            logging.info("Model Evaluation completed")
+            
+            model_evaluation_artifacts = ModelEvaluationArtifacts(
+                evaluation_loss=val_loss,
+                evaluation_accuracy=val_accuracy
+            )
+            logging.info(f"Model evaluation artifacts: {model_evaluation_artifacts}")
+            
+            logging.info("Exited the initiate_model_evaluation method of ModelEvaluator class")
+            return model_evaluation_artifacts
+
         except Exception as e:
             raise CustomException(e, sys)
