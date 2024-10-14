@@ -32,3 +32,10 @@ class ModelTrainerArtifacts:
         return self.__dict__
     
     
+# Model Evaluation Artifacts
+@dataclass
+class ModelEvaluationArtifacts:
+    is_model_accepted: bool
+    
+    def to_dict(self):
+        return self.__dict__
