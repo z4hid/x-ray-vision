@@ -1,14 +1,14 @@
 import os
 import sys
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from torchvision import models
 
 from src.exception import CustomException
 from src.logger import logging
+
+from src.entity.pretrained_model import get_pretrained_model 
 from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_entity import DataTransformationArtifacts, ModelTrainerArtifacts
 from src.utils.main_utils import load_object
@@ -18,11 +18,6 @@ from src.constants import *
 class ModelTrainer:
     def __init__(self, model_trainer_config: ModelTrainerConfig,
                  data_transformation_artifacts: DataTransformationArtifacts):
-        """
-        This method initializes the model trainer object with the config and artifacts.
-        ModelTrainerConfig: model trainer config object
-        DataTransformationArtifacts: data transformation artifacts object
-        """
         self.model_trainer_config = model_trainer_config
         self.data_transformation_artifacts = data_transformation_artifacts
         self.learning_rate = self.model_trainer_config.LR
@@ -120,13 +115,12 @@ class ModelTrainer:
                                       num_workers=self.num_workers)
             logging.info("Loaded train and valid dataloader")
             
-            model = models.resnet34(weights=models.ResNet34_Weights.DEFAULT)
-            num_features = model.fc.in_features
-            model.fc = nn.Linear(num_features, 1)
-            logging.info("Loaded pretrained resnet34 model")
+            # Load the model from the pretrainedmodel file
+            model = get_pretrained_model()
+            logging.info("Loaded pretrained ResNet34 model")
             model = model.to(DEVICE)
             
-            criterion = nn.BCEWithLogitsLoss() # Binary cross entropy with sigmoid, so no need to use sigmoid in the model
+            criterion = nn.BCEWithLogitsLoss()  # Binary cross entropy with sigmoid
             optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
             
             logging.info("Model Training started")
