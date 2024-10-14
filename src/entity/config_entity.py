@@ -50,4 +50,7 @@ class ModelEvaluationConfig:
     def __init__(self):
         self.model_evaluation_config = read_yaml_file(CONFIG_PATH)
         self.MODEl_NAME: str = self.model_evaluation_config['model_evaluation_config']['model_name']
-        
+        self.BATCH_SIZE: int = self.model_evaluation_config['model_evaluation_config']['batch_size']
+        self.NUM_WORKERS: int = self.model_evaluation_config['model_evaluation_config']['num_workers']
+        self.MODEL_EVALUATION_ARTIFACTS_DIR: str = os.path.join(os.getcwd(), ARTIFACTS_DIR, MODEL_EVALUATION_ARTIFACTS_DIR)
+        self.BEST_MODEL_DIR: str = os.path.join(self.MODEL_EVALUATION_ARTIFACTS_DIR, BEST_MODEL_DIR)
