@@ -5,6 +5,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from huggingface_hub import hf_hub_download
+import mlflow
+import mlflow.pytorch
+import dagshub
 
 from src.exception import CustomException
 from src.logger import logging
@@ -20,6 +23,9 @@ class ModelEvaluation:
         self.model_trainer_artifacts = model_trainer_artifacts
         self.data_transformation_artifacts = data_transformation_artifacts
         
+        # Set up DAGsHub and MLflow
+        dagshub.init(repo_owner='z4hid', repo_name='x-ray-vision', mlflow=True)
+        
     def get_best_model_from_huggingface(self):
         try:
             logging.info("Downloading the best model from HuggingFace")
@@ -27,16 +33,12 @@ class ModelEvaluation:
                                          filename=self.model_evaluation_config.MODEL_NAME)
             logging.info(f"Model downloaded from HuggingFace: {model_path}")
             
-            # Load the model from the HuggingFace download path
             model = torch.load(model_path, map_location=DEVICE)
             return model
         except Exception as e:
             raise CustomException(e, sys)
 
     def evaluate(self, model, criterion, dataloader):
-        """
-        Evaluates the model on the validation/test set.
-        """
         try:
             model.eval()
             val_loss = 0.0
@@ -73,7 +75,6 @@ class ModelEvaluation:
     def initiate_model_evaluation(self) -> ModelEvaluationArtifacts:
         logging.info("Initiating model evaluation")
         try:
-            # Load test data for evaluation
             test_dataset = load_object(file_path=self.data_transformation_artifacts.test_transformed_object)
             test_loader = DataLoader(dataset=test_dataset,
                                      shuffle=False,
@@ -81,38 +82,37 @@ class ModelEvaluation:
                                      num_workers=self.model_evaluation_config.NUM_WORKERS)
             criterion = nn.BCEWithLogitsLoss()
             
-            # Load the currently trained model
-            logging.info("Loading the currently trained model")
-            
-            # First, initialize the model architecture
-            model_architecture = get_pretrained_model()  # You need to define this function based on your model
-            
-            # Then, load the weights (state_dict)
-            state_dict = torch.load(self.model_trainer_artifacts.trained_model_path, map_location=DEVICE)
-            
-            # Load state_dict into the model architecture
-            model_architecture.load_state_dict(state_dict)
-            model_architecture.to(DEVICE)
-            
-            # Evaluate the trained model
-            trained_model_loss, _ = self.evaluate(model=model_architecture, criterion=criterion, dataloader=test_loader)
-            
-            # Fetch the best model from HuggingFace
-            logging.info("Fetching the best model from HuggingFace")
-            best_model = self.get_best_model_from_huggingface()
-            
-            # Assuming the best model from HuggingFace is also a state_dict, do the same steps
-            model_architecture.load_state_dict(best_model)
-            best_model_loss, _ = self.evaluate(model=model_architecture, criterion=criterion, dataloader=test_loader)
-            
-            # Compare losses between the best model and the trained model
-            logging.info(f"Comparing losses: trained_model_loss={trained_model_loss}, best_model_loss={best_model_loss}")
-            if best_model_loss < trained_model_loss:
-                is_model_accepted = False
-                logging.info("The best model from HuggingFace is better. Keeping it.")
-            else:
-                is_model_accepted = True
-                logging.info("The trained model is better. Keeping the trained model.")
+            with mlflow.start_run():
+                logging.info("Loading the currently trained model")
+                
+                model_architecture = get_pretrained_model()
+                state_dict = torch.load(self.model_trainer_artifacts.trained_model_path, map_location=DEVICE)
+                model_architecture.load_state_dict(state_dict)
+                model_architecture.to(DEVICE)
+                
+                trained_model_loss, trained_model_accuracy = self.evaluate(model=model_architecture, criterion=criterion, dataloader=test_loader)
+                
+                mlflow.log_metric("trained_model_loss", trained_model_loss)
+                mlflow.log_metric("trained_model_accuracy", trained_model_accuracy)
+                
+                logging.info("Fetching the best model from HuggingFace")
+                best_model = self.get_best_model_from_huggingface()
+                model_architecture.load_state_dict(best_model)
+                best_model_loss, best_model_accuracy = self.evaluate(model=model_architecture, criterion=criterion, dataloader=test_loader)
+                
+                mlflow.log_metric("best_model_loss", best_model_loss)
+                mlflow.log_metric("best_model_accuracy", best_model_accuracy)
+                logging.info(f"Comparing losses: trained_model_loss={trained_model_loss}, best_model_loss={best_model_loss}")
+                if best_model_loss < trained_model_loss:
+                    is_model_accepted = False
+                    mlflow.log_param("best_model", "HuggingFace")
+                    logging.info("The best model from HuggingFace is better. Keeping it.")
+                else:
+                    is_model_accepted = True
+                    mlflow.log_param("best_model", "Trained")
+                    logging.info("The trained model is better. Keeping the trained model.")
+                
+                mlflow.pytorch.log_model(model_architecture, "model")
     
             model_evaluation_artifacts = ModelEvaluationArtifacts(is_model_accepted=is_model_accepted)
             logging.info("Model evaluation completed")
