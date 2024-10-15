@@ -7,13 +7,11 @@ from tqdm import tqdm
 
 from src.exception import CustomException
 from src.logger import logging
-
 from src.entity.pretrained_model import get_pretrained_model 
 from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_entity import DataTransformationArtifacts, ModelTrainerArtifacts
 from src.utils.main_utils import load_object
 from src.constants import *
-
 
 class ModelTrainer:
     def __init__(self, model_trainer_config: ModelTrainerConfig,
@@ -40,10 +38,6 @@ class ModelTrainer:
                     optimizer.zero_grad()
                     outputs = model(images).squeeze()
                     
-                    # Ensure outputs and labels have the same shape
-                    outputs = outputs.view(-1)
-                    labels = labels.view(-1)
-                    
                     loss = criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
@@ -53,10 +47,10 @@ class ModelTrainer:
                     train_total += labels.size(0)
                     train_correct += (predicted == labels).sum().item()
                     
-                    pbar.set_postfix({'loss': train_loss / (pbar.n + 1), 'accuracy': 100 * train_correct / train_total})
+                    pbar.set_postfix({'loss': train_loss / (pbar.n + 1), 'accuracy': train_correct / train_total})
             
             train_loss /= len(train_dataloader)
-            train_accuracy = 100 * train_correct / train_total
+            train_accuracy = train_correct / train_total
 
             model.eval()
             val_loss = 0.0
@@ -70,11 +64,6 @@ class ModelTrainer:
                         labels = labels.float().to(DEVICE)
                         
                         outputs = model(images).squeeze()
-                        
-                        # Ensure outputs and labels have the same shape
-                        outputs = outputs.view(-1)
-                        labels = labels.view(-1)
-                        
                         loss = criterion(outputs, labels)
                         
                         val_loss += loss.item()
@@ -82,15 +71,15 @@ class ModelTrainer:
                         val_total += labels.size(0)
                         val_correct += (predicted == labels).sum().item()
                         
-                        pbar.set_postfix({'loss': val_loss / (pbar.n + 1), 'accuracy': 100 * val_correct / val_total})
+                        pbar.set_postfix({'loss': val_loss / (pbar.n + 1), 'accuracy': val_correct / val_total})
             
             val_loss /= len(val_dataloader)
-            val_accuracy = 100 * val_correct / val_total
+            val_accuracy = val_correct / val_total
 
-            print(f"Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%")
-            print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
-            logging.info(f"Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%")
-            logging.info(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
+            print(f"Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}")
+            print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
+            logging.info(f"Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}")
+            logging.info(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
             return train_loss, train_accuracy, val_loss, val_accuracy
 
@@ -118,9 +107,13 @@ class ModelTrainer:
             # Load the model from the pretrainedmodel file
             model = get_pretrained_model()
             logging.info("Loaded pretrained ResNet34 model")
+            
+            # Modify the final layer for binary classification
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs, 1)  # 1 output for binary classification
             model = model.to(DEVICE)
             
-            criterion = nn.BCEWithLogitsLoss()  # Binary cross entropy with sigmoid
+            criterion = nn.BCEWithLogitsLoss()  # Binary Cross Entropy with Logits Loss
             optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
             
             logging.info("Model Training started")
